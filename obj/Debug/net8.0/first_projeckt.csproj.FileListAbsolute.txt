@@ -1,0 +1,14 @@
+C:\vs code\first_projeckt\bin\Debug\net8.0\first_projeckt.exe
+C:\vs code\first_projeckt\bin\Debug\net8.0\first_projeckt.deps.json
+C:\vs code\first_projeckt\bin\Debug\net8.0\first_projeckt.runtimeconfig.json
+C:\vs code\first_projeckt\bin\Debug\net8.0\first_projeckt.dll
+C:\vs code\first_projeckt\bin\Debug\net8.0\first_projeckt.pdb
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.GeneratedMSBuildEditorConfig.editorconfig
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.AssemblyInfoInputs.cache
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.AssemblyInfo.cs
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.csproj.CoreCompileInputs.cache
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.dll
+C:\vs code\first_projeckt\obj\Debug\net8.0\refint\first_projeckt.dll
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.pdb
+C:\vs code\first_projeckt\obj\Debug\net8.0\first_projeckt.genruntimeconfig.cache
+C:\vs code\first_projeckt\obj\Debug\net8.0\ref\first_projeckt.dll
