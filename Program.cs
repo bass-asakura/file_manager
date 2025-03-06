@@ -3,54 +3,64 @@
 class Program
 {
     static void Main(string[] args)
-    {
+    {   
         StartProgramm();
-        Directory.CreateDirectory(@"C:\test_for_filemanager" + @"\new_folder_1");
     }
 
     static void StartProgramm()
     {
-        Console.WriteLine("1. Посмотреть файлы");
-        Console.WriteLine("2. Копировать файл");
-        Console.WriteLine("3. Удалить файл");
-        var vvod = Console.ReadLine() ?? "";
-
-        try
+        while(true)
         {
-            switch (vvod)
+            try
             {
-                case "1":
-                    Console.WriteLine("Введите путь");
-                    var path = Console.ReadLine() ?? "";
+                var vvod = Console.ReadLine() ?? ""; 
 
-                    var dirs = Directory.GetDirectories(path);
-                    var files = Directory.GetFiles(path);
+                switch (vvod.ToLower())
+                { 
+                    case "goto":
+                        var pathDir = Console.ReadLine() ?? "";
+                        var dirs = Directory.GetDirectories(pathDir);
+                        var files = Directory.GetFiles(pathDir);
 
-                    foreach (string dir in dirs) Console.WriteLine(dir);
-                    foreach (string file in files) Console.WriteLine(file);
-                    break;
-                    
-                case "2":
-                    Console.WriteLine("Введите путь к файлу");
-                    var pathFile = Console.ReadLine() ?? "";
-                    
-                    Console.WriteLine("Введите путь к папке, в котторую хотите скопировать");
-                    var pathDir = Console.ReadLine() ?? "";
-                    
-                    File.Copy(pathFile, pathDir);
-                    break;
+                        foreach (string dir in dirs) Console.WriteLine(dir);
+                        foreach (string file in files) Console.WriteLine(file);
+                        break;
 
-                case "3":
-                    break;    
-                
-                default:
-                    Console.WriteLine("ti daun");
-                    break;
+                    case "copy":
+                        var pathSourse = Console.ReadLine() ?? "";
+                        var pathDest = Console.ReadLine() ?? "";
+                        
+                        File.Copy(pathSourse, pathDest);
+                        break;
+
+                    case "delete":
+                        var pathDelete = Console.ReadLine() ?? "";
+                        File.Delete(pathDelete);
+                        break; 
+
+                    case "quit":
+                        return;   
+                    
+                    default:
+                        Console.WriteLine("Ошибка");
+                        break;
+                }
             }
-        }
-        catch (DirectoryNotFoundException)
-        {
-            Console.WriteLine("Файл не найден");
+
+            catch (DirectoryNotFoundException)
+            {
+                Console.WriteLine("Папка не найдена");
+                StartProgramm();
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("Файл не найден");
+                StartProgramm();
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
