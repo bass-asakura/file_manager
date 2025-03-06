@@ -13,11 +13,12 @@ class Program
         {
             try
             {
-                var vvod = Console.ReadLine() ?? ""; 
+                var vvod = Console.ReadLine() ?? ""; // запрашиваем у пользователя команду
 
                 switch (vvod.ToLower())
                 { 
                     case "goto":
+
                         var pathDir = Console.ReadLine() ?? "";
                         var dirs = Directory.GetDirectories(pathDir);
                         var files = Directory.GetFiles(pathDir);
@@ -27,13 +28,15 @@ class Program
                         break;
 
                     case "copy":
+
                         var pathSourse = Console.ReadLine() ?? "";
-                        var pathDest = Console.ReadLine() ?? "";
+                        var pathDestination = Console.ReadLine() ?? "";
                         
-                        File.Copy(pathSourse, pathDest);
+                        File.Copy(pathSourse, pathDestination);
                         break;
 
                     case "delete":
+
                         var pathDelete = Console.ReadLine() ?? "";
                         File.Delete(pathDelete);
                         break; 
