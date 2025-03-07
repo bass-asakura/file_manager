@@ -24,7 +24,8 @@ class Program
                     case "goto":
 
                         var pathDir = Console.ReadLine() ?? "";     
-                        WriteInFile(pathDir);
+
+                        WriteInFile(pathDir);            // записываем в файл последнюю сессию
                         break;
 
                     case "copy":
@@ -37,10 +38,12 @@ class Program
                             File.Copy(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));
                         } 
 
-                        else if (Directory.Exists(pathSourse))
+                        if (Directory.Exists(pathSourse))
                         {
                             CopyDirectory(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));
                         }
+
+                        WriteInFile(Path.GetDirectoryName(pathSourse));    // обновляем информацию в файле
                         break;
 
                     case "delete":
@@ -53,11 +56,11 @@ class Program
                         
                         if (Directory.Exists(pathDelete))
                         {
-                            foreach (string file in Directory.GetFiles(pathDelete)) File.Delete(file);
-                            Directory.Delete(pathDelete);
+                            CleanDirectory(pathDelete);     // удаляем все из папки
+                            Directory.Delete(pathDelete);   // удаляем папку
                         }
                         
-                        WriteInFile(Path.GetDirectoryName(pathDelete));
+                        WriteInFile(Path.GetDirectoryName(pathDelete));     // обновляем информацию в файле
                         break;
                     
                     case "info":
@@ -74,7 +77,7 @@ class Program
                             Console.WriteLine($"Атрибуты файла - {fileInfo.Attributes}");
                         }
 
-                        if (Directory.Exists(pathInfo))
+                        else if (Directory.Exists(pathInfo))
                         {
                             DirectoryInfo dirInfo = new DirectoryInfo(pathInfo);
 
@@ -83,12 +86,13 @@ class Program
                             Console.WriteLine($"Дата последнего изменения - {dirInfo.LastWriteTime}");
                             Console.WriteLine($"Атрибуты - {dirInfo.Attributes}");
                         }
+                        else Console.WriteLine("Ничего не найдено");
                         break;
 
-                    case "quit":
+                    case "quit":        // команда для выхода
                         return;   
                     
-                    default:
+                    default:            // обработка неверного ввода команды
                         Console.WriteLine("Ошибка");
                         break;
                 }
@@ -112,6 +116,7 @@ class Program
         }
         catch (ArgumentException)
         {
+            Console.WriteLine("Неверный аргумент");
             StartProgramm();
         }
         catch (UnauthorizedAccessException)
@@ -121,9 +126,9 @@ class Program
         }
     }
 
-    static void WriteInFile(string? path)
+    static void WriteInFile(string? path)   // функция для записи в файл
     {
-        if (path == null) return;
+        if (path == null) return;       // чтобы не было warning CS8604
 
         var dirs = Directory.GetDirectories(path);
         var files = Directory.GetFiles(path);
@@ -136,19 +141,33 @@ class Program
 
     static void CopyDirectory(string pathSourse, string pathDestination)
     {  
-        if (!Directory.Exists(pathDestination))
+        if (!Directory.Exists(pathDestination))     // создание папки, если ее нет
         {
             Directory.CreateDirectory(pathDestination);
         }
        
-        foreach (string file in Directory.GetFiles(pathSourse))
+        foreach (string file in Directory.GetFiles(pathSourse))     // копирование файлов
         {
             File.Copy(file, Path.Combine(pathDestination, Path.GetFileName(file)));
         }
 
-        foreach (string subDir in Directory.GetDirectories(pathSourse))
+        foreach (string subDir in Directory.GetDirectories(pathSourse))     // рекурсивное копирование подпапок
         {
             CopyDirectory(subDir, Path.Combine(pathDestination, Path.GetFileName(subDir)));
+        }
+    }
+
+    static void CleanDirectory(string path)
+    {
+        foreach (string file in Directory.GetFiles(path))   // удаляем все файлы из папки
+        {
+            File.Delete(file);
+        }
+
+        foreach (string dir in Directory.GetDirectories(path))      // удаляем файлы из подпапок и подпапки
+        {
+            CleanDirectory(dir);
+            Directory.Delete(dir);
         }
     }
 }
