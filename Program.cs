@@ -13,6 +13,7 @@ class Program
         {
             while(true)
             {
+                Console.WriteLine("__");
                 var last = File.ReadAllText(@"C:\vs code\file_manager\lastsession");  // переменная в которой хранится последняя сесссия
                 Console.WriteLine(last);
 
@@ -23,21 +24,7 @@ class Program
                     case "goto":
 
                         var pathDir = Console.ReadLine() ?? "";     
-                        var dirs = Directory.GetDirectories(pathDir);
-                        var files = Directory.GetFiles(pathDir);
-
-                        File.WriteAllText(@"C:\vs code\file_manager\lastsession", "");      // очистка файла путем перезаписывания в него пустой строки
-
-                        foreach (string dir in dirs) 
-                        {   
-                            File.AppendAllText(@"C:\vs code\file_manager\lastsession", dir + "\n");
-                        }
-
-                        foreach (string file in files) 
-                        {
-                            File.AppendAllText(@"C:\vs code\file_manager\lastsession", file + "\n");
-                        }
-
+                        WriteInFile(pathDir);
                         break;
 
                     case "copy":
@@ -47,32 +34,55 @@ class Program
 
                         if (File.Exists(pathSourse))
                         {
-                            File.Copy(pathSourse, pathDestination);
-                        }
-                        if (Directory.Exists(pathSourse))
+                            File.Copy(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));
+                        } 
+
+                        else if (Directory.Exists(pathSourse))
                         {
-                            CopyDirectory(pathSourse, pathDestination);
+                            CopyDirectory(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));
                         }
                         break;
 
                     case "delete":
-
                         var pathDelete = Console.ReadLine() ?? "";
-                        File.Delete(pathDelete);
+
+                        if (File.Exists(pathDelete))
+                        {
+                            File.Delete(pathDelete);
+                        }
+                        
+                        if (Directory.Exists(pathDelete))
+                        {
+                            foreach (string file in Directory.GetFiles(pathDelete)) File.Delete(file);
+                            Directory.Delete(pathDelete);
+                        }
+                        
+                        WriteInFile(Path.GetDirectoryName(pathDelete));
                         break;
                     
                     case "info":
                         var pathInfo = Console.ReadLine() ?? "";
-                        FileInfo fileInfo = new FileInfo(pathInfo);
 
-                        Console.WriteLine($"Имя файла: {fileInfo.Name}");
-                        Console.WriteLine($"Размер файла: {fileInfo.Length} байт");
-                        Console.WriteLine($"Дата создания: {fileInfo.CreationTime}");
-                        Console.WriteLine($"Дата последней модификации: {fileInfo.LastWriteTime}");
-                        Console.WriteLine($"Дата последнего доступа: {fileInfo.LastAccessTime}");
-                        Console.WriteLine($"Атрибуты файла: {fileInfo.Attributes}");
-                        Console.WriteLine($"Расширение файла: {fileInfo.Extension}");
-                        Console.WriteLine($"Только для чтения: {fileInfo.IsReadOnly}");
+                        if (File.Exists(pathInfo))
+                        {
+                            FileInfo fileInfo = new FileInfo(pathInfo);
+
+                            Console.WriteLine($"Имя файла - {fileInfo.Name}");
+                            Console.WriteLine($"Размер файла - {fileInfo.Length} байт");
+                            Console.WriteLine($"Дата создания - {fileInfo.CreationTime}");
+                            Console.WriteLine($"Дата последнего изменения - {fileInfo.LastWriteTime}");
+                            Console.WriteLine($"Атрибуты файла - {fileInfo.Attributes}");
+                        }
+
+                        if (Directory.Exists(pathInfo))
+                        {
+                            DirectoryInfo dirInfo = new DirectoryInfo(pathInfo);
+
+                            Console.WriteLine($"Имя папки - {dirInfo.Name}");
+                            Console.WriteLine($"Дата создания - {dirInfo.CreationTime}");
+                            Console.WriteLine($"Дата последнего изменения - {dirInfo.LastWriteTime}");
+                            Console.WriteLine($"Атрибуты - {dirInfo.Attributes}");
+                        }
                         break;
 
                     case "quit":
@@ -100,38 +110,46 @@ class Program
             Console.WriteLine(ex.Message);
             StartProgramm();
         }
+        catch (ArgumentException)
+        {
+            StartProgramm();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Console.WriteLine("Нет доступа");
+            StartProgramm();
+        }
     }
 
-    /// <summary>
-    /// Рекурсивно копирует папку и её содержимое.
-    /// </summary>
-    /// <param name="sourceDir">Исходная папка.</param>
-    /// <param name="destDir">Целевая папка.</param>
-
-    static void CopyDirectory(string sourceDir, string destDir)
+    static void WriteInFile(string? path)
     {
-        // Создаем целевую папку, если она не существует
-        if (!Directory.Exists(destDir))
+        if (path == null) return;
+
+        var dirs = Directory.GetDirectories(path);
+        var files = Directory.GetFiles(path);
+
+        File.WriteAllText(@"C:\vs code\file_manager\lastsession", "");      // очистка файла путем перезаписывания в него пустой строки
+
+        foreach (string dir in dirs) File.AppendAllText(@"C:\vs code\file_manager\lastsession", dir + "\n");
+        foreach (string file in files) File.AppendAllText(@"C:\vs code\file_manager\lastsession", file + "\n");
+    }
+
+    static void CopyDirectory(string pathSourse, string pathDestination)
+    {  
+        if (!Directory.Exists(pathDestination))
         {
-            Directory.CreateDirectory(destDir);
+            Directory.CreateDirectory(pathDestination);
+        }
+       
+        foreach (string file in Directory.GetFiles(pathSourse))
+        {
+            File.Copy(file, Path.Combine(pathDestination, Path.GetFileName(file)));
         }
 
-        // Копируем файлы
-        foreach (string file in Directory.GetFiles(sourceDir))
+        foreach (string subDir in Directory.GetDirectories(pathSourse))
         {
-            string fileName = Path.GetFileName(file);
-            string destFile = Path.Combine(destDir, fileName);
-            File.Copy(file, destFile, true); // true — разрешает перезапись
-        }
-
-        // Копируем подпапки
-        foreach (string subDir in Directory.GetDirectories(sourceDir))
-        {
-            string subDirName = Path.GetFileName(subDir);
-            string destSubDir = Path.Combine(destDir, subDirName);
-            CopyDirectory(subDir, destSubDir); // Рекурсивно копируем подпапку
+            CopyDirectory(subDir, Path.Combine(pathDestination, Path.GetFileName(subDir)));
         }
     }
 }
-// скопировал функцию для копирования папок (надо разобраться)
-// улучшить копирование файла, с импользованием Combine и GetFileName
+
