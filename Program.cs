@@ -9,50 +9,98 @@ class Program
 
     static void StartProgramm()
     {
-        int row = Console.CursorTop;
-        int col = Console.CursorLeft;
-        int index = 0;
+        int row = Console.CursorTop;    // текущая строка курсора в консоли
+        int col = Console.CursorLeft;   // текущая колонка курсора в консоли
+        int index = 0;                  // индекс выбранного элемента
+        string pathSourse = "";         // нужна для копирования
+        bool flagCopy = false;          // нужна чтобы клавиша V не работала без C
 
         try
         {
             while(true)
             {
-                Console.WriteLine("__");
+                Console.WriteLine(" ");
                 var last = File.ReadAllText(@"C:\vs code\file_manager\lastsession");  // переменная в которой хранится последняя сесссия
-                DrawMenu(last.Split("\n"), row, col, index);
+
+                string[] paths = last.Split("\n");      // список путей для отрисовки
+                DrawMenu(paths, row, col, index);
 
                 switch (Console.ReadKey(true).Key)
                 {
-                    case ConsoleKey.DownArrow:
-                        if (index < paths.Length - 1) index++;
+                    case ConsoleKey.Q: return;      
+                    case ConsoleKey.DownArrow:                        // перемещение путем изменения индекса
+                        if (index < paths.Length - 2) index++;      
                         break;
-
-                    case ConsoleKey.UpArrow:
+                    case ConsoleKey.UpArrow:                         // перемещение путем изменения индекса
                         if (index > 0) index--;
                         break;
-                    
-                    case ConsoleKey.Q: return;
+                    case ConsoleKey.G:
+                        Console.Clear();
 
-                    case ConsoleKey.Enter:
+                        if (Directory.GetFiles(paths[index]).Length == 0 && Directory.GetDirectories(paths[index]).Length == 0)     // проверка на то пуста ли папка
+                        {                                                                                                           // если пуста то выводим только путь к папке
+                            if ($"{last[last.Length - 1]}" != @"\")         // проверка чтобы в консоли не выводилось больше одного "\" 
+                            {
+                                File.WriteAllText(@"C:\vs code\file_manager\lastsession", paths[index] + @"\");     // добавление "\" нужно для корректной работы клавиши B
+                            }
+                            else
+                            {
+                                File.WriteAllText(@"C:\vs code\file_manager\lastsession", paths[index]);
+                            }
+                        }
+                        else
+                        {
+                            WriteInFile(paths[index]);                                                          // если не пуста то выводим ее содержимое
+                        }
+                        index = 0;          // здесь и в последующих случаях нужно, чтобы при переходе в папку курсор был на первом элементе
+                        break;
+                     
+                    case ConsoleKey.B:
+
+                        Console.Clear();
+                        WriteInFile(Path.GetDirectoryName(Path.GetDirectoryName(paths[index])));        // возвращение назад путем записи в файл предыдущей папки
+                        index = 0;
+                        break;
+
+                    case ConsoleKey.I:
+                        info(paths[index]);
+                        break;
+                    
+                    case ConsoleKey.D:
+                        Console.Clear();
+                        delete(paths[index]);
+
+                        string? pathDelete = Path.GetDirectoryName(paths[index]);       
+                        if (pathDelete == null) return;                               // чтобы не было warning CS8604
+
+                        if (Directory.GetFiles(pathDelete).Length == 0 & Directory.GetDirectories(pathDelete).Length == 0)    // если папка пуста после удаления 
+                        {                                                                                                     // то записываем в файл путь к ней
+                            File.WriteAllText(@"C:\vs code\file_manager\lastsession", Path.GetDirectoryName(paths[index]) + @"\");
+                        }
+                        else
+                        {
+                            WriteInFile(Path.GetDirectoryName(paths[index]));       // иначе записываем ее содержимое
+                        }
+                        break;
+
+                    case ConsoleKey.P:
+                        var path = Console.ReadLine() ?? "";        
+                        WriteInFile(path);
+                        Console.Clear();
+                        break;
+                    case ConsoleKey.C:
+                        pathSourse = paths[index];      
+                        flagCopy = true;            
+                        break;
+
+                    case ConsoleKey.V:
+                        if (flagCopy)
+                        {
+                            string pathDestination = paths[index];
+                            copy(pathSourse, pathDestination);
+                        }
                         break;
                 }
-                
-                // var vvod = Console.ReadLine() ?? "";  // запрашиваем у пользователя команду
-                
-                // switch (vvod.ToLower())
-                // { 
-                //     case "goto": GoTo(); break;
-
-                //     case "copy": copy(); break;
-
-                //     case "delete": delete(); break;
-
-                //     case "info": info(); break;
-
-                //     case "quit": return;        // команда для выхода  
-
-                //     default: Console.WriteLine("Ошибка"); break;          // обработка неверного ввода команды
-                // }
             }
         }
 
@@ -81,13 +129,16 @@ class Program
             Console.WriteLine("Нет доступа");
             StartProgramm();
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Неизвестная ошибка" - ex.Message);
+        }
     }
 
-    static void info()
+    static void info(string pathInfo)
     {
-        var pathInfo = Console.ReadLine() ?? "";
-
-        if (File.Exists(pathInfo))
+        Console.WriteLine(" ");
+        if (File.Exists(pathInfo))      // проверяем является ли путь файлом
         {
             FileInfo fileInfo = new FileInfo(pathInfo);
 
@@ -98,7 +149,7 @@ class Program
             Console.WriteLine($"Атрибуты файла - {fileInfo.Attributes}");
         }
 
-        else if (Directory.Exists(pathInfo))
+        else if (Directory.Exists(pathInfo))  // проверяем является ли путь директорией
         {
             DirectoryInfo dirInfo = new DirectoryInfo(pathInfo);
 
@@ -108,49 +159,34 @@ class Program
             Console.WriteLine($"Атрибуты - {dirInfo.Attributes}");
         }
 
-        else Console.WriteLine("Ничего не найдено");
+        else Console.WriteLine("Ничего не найдено");  // неверный ввод
     }
 
-    static void delete()
+    static void delete(string pathDelete)
     {
-        var pathDelete = Console.ReadLine() ?? "";
-
-        if (File.Exists(pathDelete))
+        if (File.Exists(pathDelete))        // проверяем является ли путь файлом
         {
             File.Delete(pathDelete);
         }
         
-        if (Directory.Exists(pathDelete))
+        if (Directory.Exists(pathDelete))       // проверяем является ли путь директорией
         {
             CleanDirectory(pathDelete);     // удаляем все из папки
             Directory.Delete(pathDelete);   // удаляем папку
         }
-        
-        WriteInFile(Path.GetDirectoryName(pathDelete));     // обновляем информацию в файле
     }
 
-    static void copy()
+    static void copy(string pathSourse, string pathDestination)
     {
-        var pathSourse = Console.ReadLine() ?? "";
-        var pathDestination = Console.ReadLine() ?? "";
-
-        if (File.Exists(pathSourse))
+        if (File.Exists(pathSourse))        // проверяем является ли путь файлом
         {
-            File.Copy(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));
-        } 
+            File.Copy(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));        // копируем содержимое файла 
+        }                                                                                              // в только что созданый файл с таким же названием
 
-        if (Directory.Exists(pathSourse))
+        if (Directory.Exists(pathSourse))   // проверяем является ли путь директорией
         {
-            CopyDirectory(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));
+            CopyDirectory(pathSourse, Path.Combine(pathDestination, Path.GetFileName(pathSourse)));     // аналогично с файлом
         }
-
-        WriteInFile(Path.GetDirectoryName(pathSourse));    // обновляем информацию в файле
-    }
-
-    static void GoTo()
-    {
-        var pathDir = Console.ReadLine() ?? "";     
-        WriteInFile(pathDir);            // записываем в файл последнюю сессию
     }
 
     static void WriteInFile(string? path)   // функция для записи в файл
@@ -160,7 +196,7 @@ class Program
         var dirs = Directory.GetDirectories(path);
         var files = Directory.GetFiles(path);
 
-        File.WriteAllText(@"C:\vs code\file_manager\lastsession", " ");      // очистка файла путем перезаписывания в него пустой строки
+        File.WriteAllText(@"C:\vs code\file_manager\lastsession", "");      // очистка файла путем перезаписывания в него пустой строки
 
         foreach (string dir in dirs) File.AppendAllText(@"C:\vs code\file_manager\lastsession", dir + "\n");
         foreach (string file in files) File.AppendAllText(@"C:\vs code\file_manager\lastsession", file + "\n");
@@ -184,7 +220,7 @@ class Program
         }
     }
 
-    static void CleanDirectory(string path)
+    static void CleanDirectory(string path)     // нужна для удаления папки
     {
         foreach (string file in Directory.GetFiles(path))   // удаляем все файлы из папки
         {
@@ -198,7 +234,7 @@ class Program
         }
     }
 
-    private static void DrawMenu(string[] items, int row, int col, int index)
+    private static void DrawMenu(string[] items, int row, int col, int index) 
     {
         Console.SetCursorPosition(col, row);
 
@@ -206,10 +242,10 @@ class Program
         {
             if (i == index)
             {
-                Console.BackgroundColor = Console.ForegroundColor;
+                Console.BackgroundColor = Console.ForegroundColor;      // отображения места где находится курсор
                 Console.ForegroundColor = ConsoleColor.Black;
             }
-            Console.WriteLine(items[i]);
+            Console.WriteLine(items[i]);     
             Console.ResetColor();
         }
         Console.WriteLine();
