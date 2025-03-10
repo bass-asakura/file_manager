@@ -131,7 +131,7 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Неизвестная ошибка" - ex.Message);
+            Console.WriteLine("Неизвестная ошибка" + ex.Message);
         }
     }
 
